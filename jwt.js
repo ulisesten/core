@@ -3,6 +3,8 @@ const encrypt = require("./encrypt.js");
 const settings = require("./configuration");
 const crypto = require("crypto");
   
+const WEB_SESSION_TYPE = 1;
+
 class JsonWebToken {
   secret_key = settings.getSecretKey();
 
@@ -54,8 +56,8 @@ class JsonWebToken {
    * @param data object, Datos a codificar
    * @returns string, datos codificados
    */
-  write_gost_token(req, data) {
-      const credentials = data;
+  write_gost_token(req, dao) {
+      const credentials = dao;
 
       const fecha_exp = new Date().getTime() + ((settings.ACCESS_TOKEN_EXPIRATION_MINUTES || 15) * 60000);
 
@@ -63,11 +65,13 @@ class JsonWebToken {
           id: credentials.usu_id,
           init: new Date().getTime(),
           exp: fecha_exp,
+          session_type: WEB_SESSION_TYPE,
           user: {
               usu_id: credentials.usu_id,
               usu_nombre: credentials.usu_nombre,
               usu_correo: credentials.usu_correo,
-              ip: req.ip
+              ip: req.ip,
+              usu_salt: credentials.usu_salt
           },
           sign: encrypt.hash(this.secret_key + credentials.usu_id + req.ip)
       };
@@ -89,6 +93,7 @@ class JsonWebToken {
     
     if (decoded_data.sign !== expected_sign) return false;
     if (today > decoded_data.exp) return false;
+    if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
 
     return decoded_data;
   }
@@ -99,7 +104,7 @@ class JsonWebToken {
    * @returns string, hash
    */
   generate_hash(password) {
-    return encrypt.reversible_encrypt(password);
+    return encrypt.reversible_encrypt(password.trim());
   }
 
   /**
@@ -135,11 +140,13 @@ class JsonWebToken {
       id: data.usu_id,
       exp: fecha_exp,
       type: 'refresh',
+      session_type: WEB_SESSION_TYPE,
       user: {
         usu_id: data.usu_id,
         usu_nombre: data.usu_nombre,
         correo: data.usu_correo,
-        ip: req.ip
+        ip: req.ip,
+        usu_salt: data.usu_salt
       },
       sign: encrypt.hash(this.secret_key + data.usu_id + 'refresh')
     };
@@ -161,6 +168,7 @@ class JsonWebToken {
     
     if (decoded_data.sign !== expected_sign) return false;
     if (today > decoded_data.exp) return false;
+    if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
 
     return decoded_data;
   }

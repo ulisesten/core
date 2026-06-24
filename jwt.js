@@ -4,7 +4,7 @@ const settings = require("./configuration");
 const crypto = require("crypto");
   
 const WEB_SESSION_TYPE = 1;
-
+ 
 class JsonWebToken {
   secret_key = settings.getSecretKey();
 

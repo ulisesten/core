@@ -36,7 +36,7 @@ class Settings extends BaseConfig {
     CORREO_USER = process.env.CORREO_USER;
     CORREO_PASS = process.env.CORREO_PASS;
 
-    X_VECTOR = process.env.X_VECTOR;
+    X_VECTOR = process.env.X_VECTOR || '';
 
     constructor() {
         super();

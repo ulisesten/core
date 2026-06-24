@@ -1,7 +1,10 @@
+//const { path, settings } = require("../../../server.js");
 const jwt = require("./jwt.js");
 const settings = require("./configuration.js");
-const encryptService = require('./encrypt.js')
-const sqlEject = require('./sql_eject.js')
+const sqlEject = require("../librerias/sql_server/sql_eject.js");
+const { reject } = require("./errors.js");
+const encryptService = require("./encrypt.js");
+//const url_refresh_token = settings.SERVER_HOST + '/api/v1/users/refresh_token`';
 
 const CONS_USU_SIGNIN = 1
 

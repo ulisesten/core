@@ -5,7 +5,7 @@ function reject(res, status, message) {
     success: false
   });
 }
-
+ 
 module.exports = {
   reject
 };

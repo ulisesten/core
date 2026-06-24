@@ -1,7 +1,7 @@
 /**
  * Encryption and decryption function only
  */
-
+ 
 
 const gost = require("gost-cryptography");
 const settings = require("./configuration");

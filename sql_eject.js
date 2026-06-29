@@ -36,9 +36,16 @@ class SqlEject {
             const request = pool.request();
         
             const query = `
-                SELECT PARAMETER_NAME, DATA_TYPE
-                FROM information_schema.parameters
-                WHERE specific_name = @procedimientoAlmacenado;
+                SELECT 
+                    p.name AS PARAMETER_NAME,
+                    t.name AS DATA_TYPE,
+                    p.precision AS NUMERIC_PRECISION,
+                    p.scale AS NUMERIC_SCALE,
+                    p.max_length AS CHARACTER_MAXIMUM_LENGTH
+                FROM sys.parameters p
+                JOIN sys.types t ON p.system_type_id = t.system_type_id AND p.user_type_id = t.user_type_id
+                WHERE object_id = OBJECT_ID(@procedimientoAlmacenado)
+                ORDER BY parameter_id;
             `;
         
             const sp_schema_result = await request
@@ -51,28 +58,35 @@ class SqlEject {
             for (const param of proc_params) {
                 const tipo = param.DATA_TYPE;
                 const columna = param.PARAMETER_NAME.replace('@', '');
-        
+                const precision = param.NUMERIC_PRECISION;
+                const scale = param.NUMERIC_SCALE;
+
                 if (['usuario_alta', 'usuario_mod'].includes(columna)) {
-                    valores[columna] = { value: login_id, type: tipo };
+                    valores[columna] = { value: login_id, type: tipo, precision, scale };
                     continue;
                 }
-        
+
                 if (tipo === 'datetime') {
                     valores[columna] = {
                         value: ['fecha_alta', 'fecha_mod'].includes(columna)
                         ? new Date()
                         : '1900-01-01 00:00:00',
-                        type: tipo
+                        type: tipo, precision, scale
                     };
                     continue;
                 }
-        
-                if (tipo === 'int') {
-                    valores[columna] = { value: 0, type: tipo };
+
+                if (tipo === 'decimal' || tipo === 'numeric') {
+                    valores[columna] = { value: 0, type: tipo, precision, scale };
                     continue;
                 }
-        
-                valores[columna] = { value: null, type: tipo };
+
+                if (tipo === 'int') {
+                    valores[columna] = { value: 0, type: tipo, precision, scale };
+                    continue;
+                }
+
+                valores[columna] = { value: null, type: tipo, precision, scale };
             }
         
             // Asignar valores recibidos
@@ -88,7 +102,10 @@ class SqlEject {
                 console.warn(`Parámetro ${k} indefinido`);
                 return;
                 }
-                sp_request.input(k, tipoMSSQL[v.type], v.value);
+                const mssqlType = (v.type === 'decimal' || v.type === 'numeric')
+                    ? sql.Decimal(v.precision || 18, v.scale || 0)
+                    : tipoMSSQL[v.type];
+                sp_request.input(k, mssqlType, v.value);
             });
         
             const result = await sp_request.execute(sp_name);

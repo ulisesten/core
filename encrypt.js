@@ -81,7 +81,8 @@ class EncryptService {
    * @returns string **/
   hash(data) {
     ///    gost.hash.calcular
-    return gost.Хэшевание.Вычислить(data, false).toString(16);
+    const input = gost.Код.Строку_в_байты(data);
+    return gost.Хэшевание.Вычислить(input, false).toString(16);
   }
   
 }

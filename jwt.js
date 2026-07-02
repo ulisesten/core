@@ -9,6 +9,19 @@ class JsonWebToken {
   secret_key = settings.getSecretKey();
 
   /**
+   * @brief Compara dos strings de forma segura contra timing attacks
+   * @param a string, primer valor a comparar
+   * @param b string, segundo valor a comparar
+   * @returns bool, true si son iguales
+   */
+  static safeCompare(a, b) {
+    const bufA = Buffer.from(a);
+    const bufB = Buffer.from(b);
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  }
+
+  /**
    * @brief Genera un token JWT
    * @param string Datos a codificar
    * @returns
@@ -89,9 +102,10 @@ class JsonWebToken {
     let decrypted_data = encrypt.decrypt(token);
       
     const decoded_data = JSON.parse(decrypted_data);
+
     const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + decoded_data.user.ip);
-    
-    if (decoded_data.sign !== expected_sign) return false;
+
+    if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
     if (today > decoded_data.exp) return false;
     if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
 
@@ -114,19 +128,12 @@ class JsonWebToken {
    * @returns bool si la contraseña es correcta retorna true
    */
   gost_hash_verify(password, hash) {
-    
+
     const new_hash = encrypt.hash(password);
 
     if (hash.length != new_hash.length) return false;
 
-    let i = 0;
-    while (i < new_hash.length && hash[i] == new_hash[i]) {
-      i += 1;
-    }
-
-    if (i != new_hash.length) return false;
-
-    return true;
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(new_hash));
   }
 
   /**
@@ -165,8 +172,8 @@ class JsonWebToken {
     const decoded_data = JSON.parse(decrypted_data);
 
     const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + 'refresh');
-    
-    if (decoded_data.sign !== expected_sign) return false;
+
+    if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
     if (today > decoded_data.exp) return false;
     if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
 
@@ -221,7 +228,7 @@ class JsonWebToken {
         this.secret_key + decrypted_data.rand + decrypted_data.exp + suffix
       );
 
-      if (expected_sign !== decrypted_data.sign) return false;
+      if (!JsonWebToken.safeCompare(expected_sign, decrypted_data.sign)) return false;
 
       return true;
     } catch (e) {

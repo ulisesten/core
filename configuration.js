@@ -40,8 +40,8 @@ class Settings extends BaseConfig {
 
     constructor() {
         super();
-        //this.VIDEO_OUTPUT_PATH = path.join(this.PROJECTDIR, process.env.VIDEO_OUTPUT_PATH);
-        //this.TEMP_VIDEOS_PATH = path.join(this.PROJECTDIR, process.env.TEMP_VIDEOS_PATH);
+        this.VIDEO_OUTPUT_PATH = path.join(this.PROJECTDIR, process.env.VIDEO_OUTPUT_PATH);
+        this.TEMP_VIDEOS_PATH = path.join(this.PROJECTDIR, process.env.TEMP_VIDEOS_PATH);
     }
 
     getDatabaseConfig() {

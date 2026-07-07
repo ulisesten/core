@@ -151,7 +151,7 @@ class JsonWebToken {
       user: {
         usu_id: data.usu_id,
         usu_nombre: data.usu_nombre,
-        correo: data.usu_correo,
+        usu_correo: data.usu_correo,
         ip: req.ip,
         usu_salt: data.usu_salt
       },

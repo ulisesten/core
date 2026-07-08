@@ -24,10 +24,6 @@ class AuthorizationService {
         const token = req.cookies['access_token'];
         const csrf_token = req.headers['x-csrf-token'];
 
-        console.log('[AUTH verify] path:', req.path);
-        console.log('[AUTH verify] token presente:', !!token);
-        console.log('[AUTH verify] csrf presente:', !!csrf_token);
-
         if ( !token  || !csrf_token) {
             res.status(401).json({
                 success: false,
@@ -42,10 +38,8 @@ class AuthorizationService {
         const auth = jwt.gost_verify(token);
         const csrf_valid = jwt.verify_csrf_token(csrf_token);
 
-        console.log('[AUTH verify] gost_verify resultado:', auth ? 'OK' : 'FAIL');
-        console.log('[AUTH verify] csrf_valid:', csrf_valid);
-
         if (!auth || !csrf_valid) {
+            console.error('[AUTH verify] rechazado - gost:', !!auth, 'csrf:', csrf_valid, 'path:', req.path);
             res.status(401).json({
                 success: false,
                 error: 1,

@@ -98,18 +98,23 @@ class JsonWebToken {
    * @returns string
    */
   gost_verify(token) {
-    const today = new Date().getTime();
-    let decrypted_data = encrypt.decrypt(token);
-      
-    const decoded_data = JSON.parse(decrypted_data);
+    try {
+      const today = new Date().getTime();
+      let decrypted_data = encrypt.decrypt(token);
 
-    const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + decoded_data.user.ip);
+      const decoded_data = JSON.parse(decrypted_data);
 
-    if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
-    if (today > decoded_data.exp) return false;
-    if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
+      const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + decoded_data.user.ip);
 
-    return decoded_data;
+      if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
+      if (today > decoded_data.exp) return false;
+      if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
+
+      return decoded_data;
+    } catch (e) {
+      console.error('[gost_verify] error:', e.message);
+      return false;
+    }
   }
 
   /**
@@ -167,17 +172,22 @@ class JsonWebToken {
    * @returns object|null
    */
   verify_refresh_token(token) {
-    const today = new Date().getTime();
-    let decrypted_data = encrypt.decrypt(token);
-    const decoded_data = JSON.parse(decrypted_data);
+    try {
+      const today = new Date().getTime();
+      let decrypted_data = encrypt.decrypt(token);
+      const decoded_data = JSON.parse(decrypted_data);
 
-    const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + 'refresh');
+      const expected_sign = encrypt.hash(this.secret_key + decoded_data.id + 'refresh');
 
-    if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
-    if (today > decoded_data.exp) return false;
-    if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
+      if (!JsonWebToken.safeCompare(decoded_data.sign, expected_sign)) return false;
+      if (today > decoded_data.exp) return false;
+      if (decoded_data.session_type != WEB_SESSION_TYPE) return false;
 
-    return decoded_data;
+      return decoded_data;
+    } catch (e) {
+      console.error('[verify_refresh_token] error:', e.message);
+      return false;
+    }
   }
 
   write_csrf_token(req) {
